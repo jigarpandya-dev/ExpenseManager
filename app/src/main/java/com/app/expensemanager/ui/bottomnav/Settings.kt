@@ -49,18 +49,3 @@ fun SettingScreen() {
     }
 }
 
-
-// Financial freedom - 3l\m
-// Freedom of place and time of work - settle in Junagadh
-// Doing something for Gir
-// Learn to swim
-// Fitness n personality
-// Knowledge on wildlife,trees/plants & biodiversity
-// Farm in the jungle/hills
-// Hospitality sector
-// Knowledge on mango cultivation n export
-// Knowledge on karm-kand and rituals
-// Gir cows
-// Volunteering at kankai
-// Europe & Africa tour
-// iphone and mac
