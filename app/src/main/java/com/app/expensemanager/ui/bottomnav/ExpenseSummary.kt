@@ -4,6 +4,7 @@ import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.MutableTransitionState
 import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Card
@@ -62,22 +63,24 @@ fun ExpenseSummaryScreen(viewModel: ExpenseViewModel) {
                 is NetworkResultState.Error -> {
                     Toast.makeText(context, expenseResult.message, Toast.LENGTH_LONG).show()
                 }
+                else ->{
+
+                }
             }
         }
     }
 
+
     Column(Modifier.padding(horizontal = 20.dp), verticalArrangement = Arrangement.SpaceEvenly) {
-        AnimatedVisibility(visibleState = state, enter = slideInHorizontally()) {
-            Text(
-                text = "Hi, Jigar!",
-                color = MaterialTheme.colorScheme.onSurface,
-                style = Typography.headlineLarge
-            )
-        }
+        Text(
+            text = "Hi, Jigar!",
+            color = MaterialTheme.colorScheme.onSurface,
+            style = Typography.headlineLarge
+        )
 
         Spacer(modifier = Modifier.height(20.dp))
 
-        AnimatedVisibility(visibleState = state, enter = slideInHorizontally()) {
+        AnimatedVisibility(visibleState = state, enter = slideInVertically()) {
             Card(
                 modifier = Modifier
                     .fillMaxWidth(),
@@ -85,8 +88,8 @@ fun ExpenseSummaryScreen(viewModel: ExpenseViewModel) {
                 backgroundColor = MaterialTheme.colorScheme.secondary,
                 elevation = 10.dp
             ) {
-                val highestExpense = thisWeekExpenseList.maxByOrNull { it.amount ?: 0 }
-                val thisWeekTotal = thisWeekExpenseList.sumOf { it.amount ?: 0 }
+                val highestExpense = thisWeekExpenseList.maxByOrNull { it.amount ?: 0.0 }
+                val thisWeekTotal = thisWeekExpenseList.sumOf { it.amount ?: 0.0 }
 
                 Column() {
                     Text(
@@ -119,7 +122,7 @@ fun ExpenseSummaryScreen(viewModel: ExpenseViewModel) {
 
         Spacer(modifier = Modifier.height(20.dp))
 
-        AnimatedVisibility(visibleState = state, enter = slideInHorizontally()) {
+        AnimatedVisibility(visibleState = state, enter = slideInVertically()) {
             Card(
                 modifier = Modifier
                     .fillMaxWidth(),
@@ -127,8 +130,8 @@ fun ExpenseSummaryScreen(viewModel: ExpenseViewModel) {
                 backgroundColor = MaterialTheme.colorScheme.secondary,
                 elevation = 10.dp
             ) {
-                val highestExpense = thisMonthExpenseList.maxByOrNull { it.amount ?: 0 }
-                val thisWeekTotal = thisMonthExpenseList.sumOf { it.amount ?: 0 }
+                val highestExpense = thisMonthExpenseList.maxByOrNull { it.amount ?: 0.0 }
+                val thisWeekTotal = thisMonthExpenseList.sumOf { it.amount ?: 0.0 }
 
                 Column() {
                     Text(

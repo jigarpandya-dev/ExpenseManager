@@ -5,9 +5,9 @@ import java.util.*
 
 class DateUtils {
 
-    companion object{
+    companion object {
 
-        fun getDate(date:String) : Date{
+        fun getDate(date: String): Date {
             val parser = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss")
             val date = parser.parse(date)
 
@@ -35,6 +35,15 @@ class DateUtils {
             val targetMonth: Int = targetCalendar.get(Calendar.MONTH)
 
             return month == targetMonth
+        }
+
+        fun getDateValue(date: String?): String {
+            return if (date.isNullOrBlank())
+                ""
+            else if (date.contains('T'))
+                date.substring(0, date.indexOf('T'))
+            else date
+
         }
     }
 }

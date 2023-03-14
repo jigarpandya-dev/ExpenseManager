@@ -1,5 +1,6 @@
 package com.app.expensemanager.ui.signin
 
+import android.app.Activity
 import android.content.Intent
 import android.widget.Toast
 import androidx.compose.foundation.background
@@ -52,13 +53,14 @@ fun SignInScreen(viewModel: AuthViewModel) {
                     it?.data.let { res ->
                         runBlocking {
                             ExpensePreferences(context).apply {
-                                res.username?.let { saveUser(it) }
-                                res.accessToken?.let { saveAccessToken(it) }
+                                res?.username?.let { saveUser(it) }
+                                res?.accessToken?.let { saveAccessToken(it) }
                             }
                         }
 
                     }
                     context.startActivity(Intent(context, MainActivity::class.java))
+                    (context as Activity).finish()
 
                 }
             }

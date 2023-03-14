@@ -9,7 +9,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavDestination.Companion.hierarchy
@@ -97,7 +96,7 @@ fun ExpenseScreen(parentNavController: NavHostController, viewModel: ExpenseView
                 }
         }
     ) {
-        ExpenseNavigationGraph(navController = navController, it, viewModel)
+        ExpenseNavigationGraph(navController = navController, parentNavController,it, viewModel)
     }
 }
 
@@ -105,6 +104,7 @@ fun ExpenseScreen(parentNavController: NavHostController, viewModel: ExpenseView
 @Composable
 fun ExpenseNavigationGraph(
     navController: NavHostController,
+    parentNavController: NavHostController,
     paddingValues: PaddingValues,
     viewModel: ExpenseViewModel
 ) {
@@ -117,7 +117,7 @@ fun ExpenseNavigationGraph(
             ExpenseSummaryScreen(viewModel)
         }
         composable(BottomNavItem.ExpenseList.screen_route) {
-            ExpenseListScreen(viewModel)
+            ExpenseListScreen(viewModel,parentNavController)
         }
         composable(BottomNavItem.Settings.screen_route) {
             SettingScreen()

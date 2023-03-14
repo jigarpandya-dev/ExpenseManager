@@ -18,19 +18,31 @@ import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.toSize
+import androidx.navigation.NavHostController
 import com.app.expensemanager.R
 import com.app.expensemanager.data.models.Expense
 import com.app.expensemanager.data.models.UIEvent
 import com.app.expensemanager.data.network.NetworkResultState
+import com.app.expensemanager.ui.common.SimpleAlertDialog
 import com.app.expensemanager.ui.theme.Typography
 import com.app.expensemanager.ui.viewmodel.ExpenseViewModel
+import com.app.expensemanager.utils.DateUtils
+import com.app.expensemanager.utils.DateUtils.Companion.getDateValue
 import kotlinx.coroutines.launch
 import java.util.*
 
 @Composable
-fun AddExpenseScreen(viewModel: ExpenseViewModel) {
+fun AddExpenseScreen(
+    viewModel: ExpenseViewModel,
+    expenseId: String?,
+    parentNavController: NavHostController
+) {
 
     val context = LocalContext.current
+    var expense by remember {
+        mutableStateOf(Expense())
+    }
+
     LaunchedEffect(true) {
         launch {
             viewModel.addExpenseResult.collect {
@@ -41,6 +53,29 @@ fun AddExpenseScreen(viewModel: ExpenseViewModel) {
                     is NetworkResultState.Success -> {
                         Toast.makeText(context, "Expense added !!", Toast.LENGTH_SHORT).show()
                         viewModel.getAllExpenses()
+                        parentNavController.popBackStack()
+                    }
+                    else ->{
+
+                    }
+
+                }
+            }
+        }
+
+        launch {
+            viewModel.deleteExpenseResult.collect {
+                when (it) {
+                    is NetworkResultState.Error -> {
+                        Toast.makeText(context, it.message, Toast.LENGTH_SHORT).show()
+                    }
+                    is NetworkResultState.Success -> {
+                        Toast.makeText(context, it.data.message, Toast.LENGTH_SHORT).show()
+                        viewModel.getAllExpenses()
+                        parentNavController.popBackStack()
+                    }
+                    else->{
+
                     }
 
                 }
@@ -55,44 +90,76 @@ fun AddExpenseScreen(viewModel: ExpenseViewModel) {
             }
         }
 
+        expenseId?.let {
+            val expenseDetails = viewModel.getExpenseDetails(expenseId)
+            expenseDetails?.let {
+                val tempExpense = Expense().apply {
+                    date = it.date
+                    title = it.title
+                    category = it.category
+                    amount = it.amount
+                    transactionType = it.transactionType
+                    notes = it.notes
+
+                }
+                expense = tempExpense
+            }
+        }
+
     }
 
-
-    val expense = Expense()
     Column(
         Modifier
             .fillMaxSize()
             .padding(20.dp)
     ) {
+
+        var showDialog = remember { mutableStateOf(false) }
+
         Spacer(Modifier.height(20.dp))
+
         Column(
             modifier = Modifier
                 .weight(1f)
                 .verticalScroll(rememberScrollState())
         ) {
-            ExpenseInput(hint = "Date", isDatePicker = true) {
+            val dateValue = getDateValue(expense.date)
+            ExpenseInput(hint = "Date", value = dateValue ?: "", isDatePicker = true) {
                 expense.date = it
             }
-            ExpenseInput(hint = "Title") {
+            ExpenseInput(hint = "Title", value = expense.title ?: "") {
                 expense.title = it.trim()
             }
-            ExpenseInput(hint = "Category", isCategoryDropdown = true) {
+            ExpenseInput(
+                hint = "Category",
+                value = expense.category ?: "",
+                isCategoryDropdown = true
+            ) {
                 expense.category = it
             }
-            ExpenseInput(hint = "Amount", isNumberType = true) {
+            val amountValue = if (expense.amount != null) expense.amount.toString() else ""
+            ExpenseInput(
+                hint = "Amount",
+                value = amountValue, isNumberType = true
+            ) {
                 expense.amount = it.toDouble()
             }
-            ExpenseInput(hint = "Transaction type", isTranTypeDropdown = true) {
+            ExpenseInput(
+                hint = "Transaction type",
+                value = expense.transactionType ?: "",
+                isTranTypeDropdown = true
+            ) {
                 expense.transactionType = it
             }
-            ExpenseInput(hint = "Notes") {
+            ExpenseInput(hint = "Notes", value = expense.notes ?: "") {
                 expense.notes = it
             }
 
         }
+
         Button(
             onClick = {
-                viewModel.onUIEvent(UIEvent.Submit(expense))
+                viewModel.onUIEvent(UIEvent.Submit(expense, expenseId))
             }, modifier = Modifier
                 .fillMaxWidth()
                 .height(40.dp),
@@ -100,29 +167,61 @@ fun AddExpenseScreen(viewModel: ExpenseViewModel) {
             colors = ButtonDefaults.buttonColors(backgroundColor = colorResource(id = R.color.purple40))
         ) {
             Text(
-                text = "Add Expense",
+                text = if (!expenseId.isNullOrEmpty()) "Update Expense" else "Add Expense",
                 style = Typography.bodyLarge,
                 color = colorResource(id = R.color.white)
             )
         }
+
+        Spacer(Modifier.height(10.dp))
+
+        if (!expenseId.isNullOrEmpty())
+            Button(
+                onClick = {
+                    showDialog.value = true
+                }, modifier = Modifier
+                    .fillMaxWidth()
+                    .height(40.dp),
+                shape = RoundedCornerShape(10.dp),
+                colors = ButtonDefaults.buttonColors(backgroundColor = colorResource(id = android.R.color.holo_red_dark))
+            ) {
+                Text(
+                    text = "Delete Expense",
+                    style = Typography.bodyLarge,
+                    color = colorResource(id = R.color.white)
+                )
+            }
+
+        if (showDialog.value) {
+            SimpleAlertDialog(onConfirm = {
+                viewModel.deleteExpense(expenseId!!)
+            }, onCancel = {
+                showDialog.value = false
+            })
+        }
+
+        Spacer(Modifier.height(20.dp))
     }
 }
 
 @Composable
 fun ExpenseInput(
     hint: String,
+    value: String = "",
     isNumberType: Boolean = false,
     isDatePicker: Boolean = false,
     isCategoryDropdown: Boolean = false,
     isTranTypeDropdown: Boolean = false,
     callback: (String) -> Unit
 ) {
-
-    var data by remember { mutableStateOf("") }
+    var data by remember { mutableStateOf(value) }
     var showDate by remember { mutableStateOf(false) }
     var mExpanded by remember { mutableStateOf(false) }
     var showTransType by remember { mutableStateOf(false) }
     var textFieldSize by remember { mutableStateOf(Size.Zero) }
+
+    if (value.isNotBlank())
+        data = value
 
     val c = Calendar.getInstance()
 

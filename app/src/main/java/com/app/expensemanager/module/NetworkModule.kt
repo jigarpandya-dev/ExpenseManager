@@ -4,6 +4,7 @@ import android.content.Context
 import com.app.expensemanager.data.ExpensePreferences
 import com.app.expensemanager.data.network.ExpenseService
 import com.app.expensemanager.data.network.NetworkConstants
+import com.google.gson.GsonBuilder
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -40,11 +41,11 @@ object NetworkModule {
         val httpClient = OkHttpClient.Builder()
 
         var token: String? = null
-        token = runBlocking {
-            preferences.accessToken.first()
-        }
         httpClient.addInterceptor(Interceptor { chain ->
             val request = chain.request().newBuilder()
+            token = runBlocking {
+                preferences.accessToken.first()
+            }
             if (!token.isNullOrBlank()) {
                 request.addHeader("Authorization", "Bearer $token")
             }
@@ -66,8 +67,12 @@ object NetworkModule {
 
     @Singleton
     @Provides
-    fun provideConverterFactory(): GsonConverterFactory =
-        GsonConverterFactory.create()
+    fun provideConverterFactory(): GsonConverterFactory {
+        val gson = GsonBuilder()
+            .setLenient()
+            .create();
+        return GsonConverterFactory.create()
+    }
 
     @Singleton
     @Provides

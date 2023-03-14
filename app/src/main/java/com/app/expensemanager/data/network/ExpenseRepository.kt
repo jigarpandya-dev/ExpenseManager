@@ -18,6 +18,15 @@ class ExpenseRepository @Inject constructor(private val expenseService: ExpenseS
         emit(safeApiCall { expenseService.addExpense(expense) })
     }
 
+    suspend fun updateExpense(id:String, expense: Expense) = flow {
+        emit(NetworkResultState.Loading)
+        emit(safeApiCall { expenseService.updateExpense(id,expense) })
+    }
+
+    suspend fun deleteExpense(id: String) = flow {
+        emit(safeApiCall { expenseService.deleteExpense(id) })
+    }
+
     suspend fun login(login: LoginRequest) = flow {
         emit(NetworkResultState.Loading)
         emit(safeApiCall { expenseService.login(login) })

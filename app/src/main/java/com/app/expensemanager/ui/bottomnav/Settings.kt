@@ -8,6 +8,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Button
 import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.Text
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
@@ -27,7 +28,15 @@ fun SettingScreen() {
 
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
-    Column(modifier = Modifier.fillMaxSize(), verticalArrangement = Arrangement.Bottom) {
+    Column(modifier = Modifier.fillMaxSize()) {
+        Text(
+            text = "This app is created to fulfill two goals 1) to log the daily expenses and show the summary in a simple and elegant way. " +
+                    "Secondly it demonstrates the usage of" +
+                    "Android's new toolkit Jetpack Compose, Material 3 design elements and backend apis in nodejs express app",
+            Modifier.padding(10.dp).weight(1f),
+            color = MaterialTheme.colorScheme.onSurface,
+            style = Typography.bodyLarge
+        )
         Button(
             onClick = {
                 coroutineScope.launch { ExpensePreferences(context).clearData() }
@@ -49,18 +58,3 @@ fun SettingScreen() {
     }
 }
 
-
-// Financial freedom - 3l\m
-// Freedom of place and time of work - settle in Junagadh
-// Doing something for Gir
-// Learn to swim
-// Fitness n personality
-// Knowledge on wildlife,trees/plants & biodiversity
-// Farm in the jungle/hills
-// Hospitality sector
-// Knowledge on mango cultivation n export
-// Knowledge on karm-kand and rituals
-// Gir cows
-// Volunteering at kankai
-// Europe & Africa tour
-// iphone and mac

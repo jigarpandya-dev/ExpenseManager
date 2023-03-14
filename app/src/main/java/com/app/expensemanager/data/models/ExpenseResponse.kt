@@ -14,7 +14,7 @@ data class ExpenseResponse(
 	val transactionType: String? = null,
 
 	@field:SerializedName("amount")
-	val amount: Int? = null,
+	val amount: Double? = null,
 
 	@field:SerializedName("notes")
 	val notes: String? = null,
@@ -26,5 +26,9 @@ data class ExpenseResponse(
 	val title: String? = null,
 
 	@field:SerializedName("category")
-	val category: String? = null
+	val category: String? = null,
+
+	var isHeader: Boolean = false
+
+
 )
