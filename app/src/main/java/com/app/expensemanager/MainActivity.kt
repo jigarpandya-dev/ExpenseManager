@@ -19,9 +19,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.app.expensemanager.ui.expense.AddExpenseScreen
 import com.app.expensemanager.ui.expense.ExpenseDetailScreen
 import com.app.expensemanager.ui.expense.ExpenseScreen
@@ -91,13 +93,18 @@ class MainActivity : ComponentActivity() {
             Modifier.padding(paddingValues)
         ) {
             composable("expenses") {
-                ExpenseScreen(navController,viewModel)
+                ExpenseScreen(navController, viewModel)
             }
 
-            composable("add_expense") {
-                AddExpenseScreen(viewModel)
+            composable(
+                "add_expense?expenseId={expenseId}",
+                arguments = listOf(navArgument("expenseId") {
+                    type = NavType.StringType
+                    nullable = true
+                })
+            ) {
+                AddExpenseScreen(viewModel, it.arguments?.getString("expenseId"),navController)
             }
-
             composable("expense_detail") {
                 ExpenseDetailScreen()
             }
