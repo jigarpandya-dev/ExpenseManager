@@ -51,6 +51,7 @@ fun AddExpenseScreen(
                         Toast.makeText(context, it.message, Toast.LENGTH_SHORT).show()
                     }
                     is NetworkResultState.Success -> {
+                        viewModel.onUIEvent(UIEvent.Idle)
                         Toast.makeText(context, "Expense added !!", Toast.LENGTH_SHORT).show()
                         viewModel.getAllExpenses()
                         parentNavController.popBackStack()
@@ -159,7 +160,8 @@ fun AddExpenseScreen(
 
         Button(
             onClick = {
-                viewModel.onUIEvent(UIEvent.Submit(expense, expenseId))
+                if(viewModel.uiEventState.value == UIEvent.Idle)
+                    viewModel.onUIEvent(UIEvent.Submit(expense, expenseId))
             }, modifier = Modifier
                 .fillMaxWidth()
                 .height(40.dp),
@@ -214,13 +216,13 @@ fun ExpenseInput(
     isTranTypeDropdown: Boolean = false,
     callback: (String) -> Unit
 ) {
-    var data by remember { mutableStateOf(value) }
+    var data by remember { mutableStateOf("") }
     var showDate by remember { mutableStateOf(false) }
     var mExpanded by remember { mutableStateOf(false) }
     var showTransType by remember { mutableStateOf(false) }
     var textFieldSize by remember { mutableStateOf(Size.Zero) }
 
-    if (value.isNotBlank())
+    if (data.isBlank() && value.isNotBlank())
         data = value
 
     val c = Calendar.getInstance()
@@ -305,7 +307,7 @@ fun DateUI(c: Calendar, callback: (String?) -> Unit) {
             c.set(Calendar.DAY_OF_MONTH, day)
             c.set(Calendar.MONTH, month)
             c.set(Calendar.YEAR, year)
-            callback("$year- ${month + 1}-$day")
+            callback("$year-${month + 1}-$day")
         }, year, month, day
     )
     //datePickerDialog.datePicker.minDate = c.timeInMillis
@@ -334,6 +336,7 @@ fun CategoryDropdownUI(textFieldSize: Size, callback: (String?) -> Unit) {
         "Entry Tickets",
         "Household",
         "Learning",
+        "Service & Repair"
 
         )
 

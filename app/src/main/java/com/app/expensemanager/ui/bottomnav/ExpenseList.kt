@@ -31,6 +31,8 @@ import com.app.expensemanager.data.models.ExpenseResponse
 import com.app.expensemanager.data.network.NetworkResultState
 import com.app.expensemanager.ui.theme.Typography
 import com.app.expensemanager.ui.viewmodel.ExpenseViewModel
+import com.google.accompanist.swiperefresh.SwipeRefresh
+import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
 
 
 @Composable
@@ -50,6 +52,9 @@ fun ExpenseListScreen(viewModel: ExpenseViewModel, parentNavHostController: NavH
     var state by remember { mutableStateOf(0) }
     val titles = listOf("All", "Category")
 
+    val isRefreshing = viewModel.isRefreshing.collectAsStateWithLifecycle().value
+    val swipeRefreshState = rememberSwipeRefreshState(isRefreshing = isRefreshing)
+
     LaunchedEffect(key1 = true) {
         viewModel.expenseResult.collect {
             when (val response = it) {
@@ -66,9 +71,13 @@ fun ExpenseListScreen(viewModel: ExpenseViewModel, parentNavHostController: NavH
 
                 is NetworkResultState.Success -> {
                     response.data.let { list ->
-                        list.sortedBy { it.date!! }.let { sortedList ->
-                                allList = sortedList
-                            }
+
+                        categoryWiseList.clear()
+                        expenseList.clear()
+
+                        list.sortedByDescending { it.date!! }.let { sortedList ->
+                            allList = sortedList
+                        }
 
                         allList.distinctBy {
                             it.category
@@ -90,7 +99,7 @@ fun ExpenseListScreen(viewModel: ExpenseViewModel, parentNavHostController: NavH
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(10.dp)
+            .padding(horizontal = 10.dp)
     ) {
         Row(
             modifier = Modifier.border(
@@ -128,11 +137,22 @@ fun ExpenseListScreen(viewModel: ExpenseViewModel, parentNavHostController: NavH
             }
         }
 
-        if (state == 0) ExpenseList(
-            expenseList = expenseList,
-            parentNavController = parentNavHostController
-        )
-        else CategoryList(
+        if (state == 0) {
+            SwipeRefresh(
+                state = swipeRefreshState,
+                onRefresh = { viewModel.getAllExpenses() },
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(
+                        top = 16.dp,
+                    )
+            ) {
+                ExpenseList(
+                    expenseList = expenseList,
+                    parentNavController = parentNavHostController
+                )
+            }
+        } else CategoryList(
             viewModel = viewModel, categoryList = categoryWiseList
         )
 

@@ -37,13 +37,22 @@ class ExpenseViewModel @Inject constructor(
     private val _expandedCardIdsList = MutableStateFlow(listOf<String>())
     val expandedCardIdsList: StateFlow<List<String>> get() = _expandedCardIdsList
 
+    private val _uiEventState = MutableStateFlow<UIEvent>(UIEvent.Idle)
+    val uiEventState:StateFlow<UIEvent> = _uiEventState
+
+    private val _isRefreshing = MutableStateFlow(false)
+    val isRefreshing = _isRefreshing.asStateFlow()
+
 
     init {
         getAllExpenses()
     }
 
-    fun onUIEvent(event: UIEvent.Submit) {
-        validateExpense(event.expense,event.id)
+    fun onUIEvent(event: UIEvent) {
+        _uiEventState.value = event
+        if(event is UIEvent.Submit) {
+            validateExpense(event.expense, event.id)
+        }
     }
 
     private fun validateExpense(expense: Expense,id:String?) {
@@ -99,10 +108,12 @@ class ExpenseViewModel @Inject constructor(
     }
 
     fun getAllExpenses() {
+        _isRefreshing.update { true }
         viewModelScope.launch {
             preferences.currentUser.collect {
                 it?.let {
                     repository.getAllExpenses(it).collect { res ->
+                        _isRefreshing.update { false }
                         when (res) {
                             is NetworkResultState.Error -> {
                                 _expenseResult.update { res.copy(message = res.message) }
