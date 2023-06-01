@@ -2,6 +2,7 @@ package com.app.expensemanager.ui.signin
 
 import android.app.Activity
 import android.content.Intent
+import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -11,8 +12,10 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import com.app.expensemanager.MainActivity
@@ -38,6 +41,7 @@ fun SignInScreen(viewModel: AuthViewModel) {
     var showProgress by remember {
         mutableStateOf(false)
     }
+
 
     LaunchedEffect(key1 = true) {
         viewModel.loginResult.collect {
@@ -94,6 +98,7 @@ fun SignInScreen(viewModel: AuthViewModel) {
                     onValueChange = {
                         username = it
                     },
+                    singleLine = true,
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(10.dp),
@@ -114,6 +119,7 @@ fun SignInScreen(viewModel: AuthViewModel) {
                         password = it
 
                     },
+                    singleLine = true,
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(10.dp),

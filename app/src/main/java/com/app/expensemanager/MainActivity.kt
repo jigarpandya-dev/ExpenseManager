@@ -25,6 +25,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.app.expensemanager.ui.expense.AddExpenseScreen
+import com.app.expensemanager.ui.expense.AddNewCategoryScreen
 import com.app.expensemanager.ui.expense.ExpenseDetailScreen
 import com.app.expensemanager.ui.expense.ExpenseScreen
 import com.app.expensemanager.ui.theme.ExpenseManagerTheme
@@ -107,6 +108,10 @@ class MainActivity : ComponentActivity() {
             }
             composable("expense_detail") {
                 ExpenseDetailScreen()
+            }
+
+            composable("add_category"){
+                AddNewCategoryScreen(viewModel = viewModel, parentNavController = navController)
             }
         }
     }

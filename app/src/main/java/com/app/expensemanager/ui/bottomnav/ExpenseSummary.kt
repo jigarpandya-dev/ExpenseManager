@@ -129,37 +129,40 @@ fun ExpenseSummaryScreen(viewModel: ExpenseViewModel) {
 
             Spacer(modifier = Modifier.height(20.dp))
 
-            val slices = mutableListOf<PieChartData.Slice>()
-            for ((index, data) in thisMonthChartData.withIndex()) {
-                slices.add(PieChartData.Slice(data.total.toFloat(), colorList[index]))
-            }
-            PieChart(
-                pieChartData = PieChartData(slices),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(200.dp)
-                    .padding(10.dp)
-            )
-
-            Spacer(modifier = Modifier.height(20.dp))
-
-            for ((index, data) in thisMonthChartData.withIndex()) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Box(
-                        modifier = Modifier
-                            .padding(10.dp)
-                            .width(20.dp)
-                            .height(10.dp)
-                            .background(colorList[index])
-                    )
-                    Text(
-                        text = data.category, color = MaterialTheme.colorScheme.onSurface,
-                        style = Typography.bodyMedium
-                    )
+            if (thisMonthChartData.isNotEmpty()) {
+                val slices = mutableListOf<PieChartData.Slice>()
+                for ((index, data) in thisMonthChartData.withIndex()) {
+                    slices.add(PieChartData.Slice(data.total.toFloat(), colorList[index]))
                 }
+                PieChart(
+                    pieChartData = PieChartData(slices),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(200.dp)
+                        .padding(10.dp)
+                )
+
+                Spacer(modifier = Modifier.height(20.dp))
+
+                for ((index, data) in thisMonthChartData.withIndex()) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Box(
+                            modifier = Modifier
+                                .padding(10.dp)
+                                .width(20.dp)
+                                .height(10.dp)
+                                .background(colorList[index])
+                        )
+                        Text(
+                            text = data.category, color = MaterialTheme.colorScheme.onSurface,
+                            style = Typography.bodyMedium
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(20.dp))
             }
 
-            Spacer(modifier = Modifier.height(20.dp))
 
             AnimatedVisibility(visibleState = state, enter = slideInVertically()) {
                 Card(
@@ -169,33 +172,45 @@ fun ExpenseSummaryScreen(viewModel: ExpenseViewModel) {
                     backgroundColor = MaterialTheme.colorScheme.secondary,
                     elevation = 10.dp
                 ) {
-                    val highestExpense = thisWeekExpenseList.maxByOrNull { it.amount ?: 0.0 }
-                    val thisWeekTotal = thisWeekExpenseList.sumOf { it.amount ?: 0.0 }
 
-                    Column() {
-                        Text(
-                            text = "This week's summary",
-                            Modifier.padding(10.dp),
-                            color = MaterialTheme.colorScheme.surface,
-                            style = Typography.bodyLarge
-                        )
+                    if (thisWeekExpenseList.isNotEmpty()) {
+                        val highestExpense = thisWeekExpenseList.maxByOrNull { it.amount ?: 0.0 }
+                        val thisWeekTotal = thisWeekExpenseList.sumOf { it.amount ?: 0.0 }
 
-                        highestExpense?.let {
+                        Column() {
                             Text(
-                                text = "Highest expense : ${highestExpense?.title} ${highestExpense?.amount}",
+                                text = "This week's summary",
                                 Modifier.padding(10.dp),
                                 color = MaterialTheme.colorScheme.surface,
                                 style = Typography.bodyLarge
                             )
 
+                            highestExpense?.let {
+                                Text(
+                                    text = "Highest expense : ${highestExpense?.title} ${highestExpense?.amount}",
+                                    Modifier.padding(10.dp),
+                                    color = MaterialTheme.colorScheme.surface,
+                                    style = Typography.bodyLarge
+                                )
+
+                                Text(
+                                    text = "Total : $thisWeekTotal",
+                                    Modifier.padding(10.dp),
+                                    color = MaterialTheme.colorScheme.surface,
+                                    style = Typography.bodyLarge
+                                )
+                            }
+
+                        }
+                    } else {
+                        Column() {
                             Text(
-                                text = "Total : $thisWeekTotal",
+                                text = "This week's summary\n No data to show",
                                 Modifier.padding(10.dp),
                                 color = MaterialTheme.colorScheme.surface,
                                 style = Typography.bodyLarge
                             )
                         }
-
                     }
 
                 }
@@ -211,33 +226,45 @@ fun ExpenseSummaryScreen(viewModel: ExpenseViewModel) {
                     backgroundColor = MaterialTheme.colorScheme.secondary,
                     elevation = 10.dp
                 ) {
-                    val highestExpense = thisMonthExpenseList.maxByOrNull { it.amount ?: 0.0 }
-                    val thisWeekTotal = thisMonthExpenseList.sumOf { it.amount ?: 0.0 }
 
-                    Column() {
-                        Text(
-                            text = "This month's summary",
-                            Modifier.padding(10.dp),
-                            color = MaterialTheme.colorScheme.surface,
-                            style = Typography.bodyLarge
-                        )
+                    if (thisMonthExpenseList.isNotEmpty()) {
+                        val highestExpense = thisMonthExpenseList.maxByOrNull { it.amount ?: 0.0 }
+                        val thisWeekTotal = thisMonthExpenseList.sumOf { it.amount ?: 0.0 }
 
-                        highestExpense?.let {
+                        Column() {
                             Text(
-                                text = "Highest expense : ${highestExpense?.title} ${highestExpense?.amount}",
+                                text = "This month's summary",
                                 Modifier.padding(10.dp),
                                 color = MaterialTheme.colorScheme.surface,
                                 style = Typography.bodyLarge
                             )
 
+                            highestExpense?.let {
+                                Text(
+                                    text = "Highest expense : ${highestExpense?.title} ${highestExpense?.amount}",
+                                    Modifier.padding(10.dp),
+                                    color = MaterialTheme.colorScheme.surface,
+                                    style = Typography.bodyLarge
+                                )
+
+                                Text(
+                                    text = "Total : $thisWeekTotal",
+                                    Modifier.padding(10.dp),
+                                    color = MaterialTheme.colorScheme.surface,
+                                    style = Typography.bodyLarge
+                                )
+                            }
+
+                        }
+                    } else {
+                        Column() {
                             Text(
-                                text = "Total : $thisWeekTotal",
+                                text = "This month's summary\n No data to show",
                                 Modifier.padding(10.dp),
                                 color = MaterialTheme.colorScheme.surface,
                                 style = Typography.bodyLarge
                             )
                         }
-
                     }
                 }
             }

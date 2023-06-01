@@ -1,6 +1,7 @@
 package com.app.expensemanager.ui.bottomnav
 
 import android.annotation.SuppressLint
+import android.util.Log
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.*
@@ -8,17 +9,17 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.Tab
-import androidx.compose.material.TabRow
-import androidx.compose.material.Text
+import androidx.compose.material.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.*
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
@@ -29,70 +30,100 @@ import androidx.navigation.NavHostController
 import com.app.expensemanager.R
 import com.app.expensemanager.data.models.ExpenseResponse
 import com.app.expensemanager.data.network.NetworkResultState
+import com.app.expensemanager.ui.common.MonthPickerDialog
 import com.app.expensemanager.ui.theme.Typography
 import com.app.expensemanager.ui.viewmodel.ExpenseViewModel
 import com.google.accompanist.swiperefresh.SwipeRefresh
 import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
+import java.text.SimpleDateFormat
+import java.util.*
+
 
 
 @Composable
 fun ExpenseListScreen(viewModel: ExpenseViewModel, parentNavHostController: NavHostController) {
 
+    // this is to prevent re-initialization of expenseList and categoryList during recomposition
 
     val expenseList = remember { mutableStateListOf<ExpenseResponse>() }
-
-    // this is to prevent re-initialization of allList and categoryList during recomposition
-    var allList by remember {
-        mutableStateOf<List<ExpenseResponse>>(emptyList())
-    }
-    var categoryWiseList by remember {
-        mutableStateOf(mutableListOf<ExpenseResponse>())
-    }
+    val categoryWiseList = remember { mutableStateListOf<ExpenseResponse>() }
 
     var state by remember { mutableStateOf(0) }
+    var showProgress by remember { mutableStateOf(false) }
     val titles = listOf("All", "Category")
 
-    val isRefreshing = viewModel.isRefreshing.collectAsStateWithLifecycle().value
-    val swipeRefreshState = rememberSwipeRefreshState(isRefreshing = isRefreshing)
+    val isRefreshing = viewModel.isRefreshing.collectAsStateWithLifecycle()
+    val swipeRefreshState = rememberSwipeRefreshState(isRefreshing = isRefreshing.value)
 
     LaunchedEffect(key1 = true) {
         viewModel.expenseResult.collect {
             when (val response = it) {
                 is NetworkResultState.Loading -> {
-                    //  Column(
-                    //         modifier = Modifier
-                    //               .fillMaxSize(),
-                    //                verticalArrangement = Arrangement.Center,
-                    //                horizontalAlignment = Alignment.CenterHorizontally
-                    //    ) {
-                    //         CircularProgressIndicator(color = MaterialTheme.colorScheme.secondary)
-                    //      }
+                     showProgress = true
                 }
 
                 is NetworkResultState.Success -> {
+                    showProgress = false
                     response.data.let { list ->
-
                         categoryWiseList.clear()
                         expenseList.clear()
 
-                        list.sortedByDescending { it.date!! }.let { sortedList ->
-                            allList = sortedList
-                        }
+                        list.sortedByDescending { it.date!! }
 
-                        allList.distinctBy {
+                        list.distinctBy {
                             it.category
                         }.forEach { categoryExpense ->
                             categoryWiseList.add(categoryExpense.copy(isHeader = true))
-                            categoryWiseList.addAll(allList.filter { it.category == categoryExpense.category })
+                            categoryWiseList.addAll(list.filter { it.category == categoryExpense.category })
                         }
-                        expenseList.addAll(allList)
+                        expenseList.addAll(list)
                     }
                 }
 
                 is NetworkResultState.Error -> {
+                    showProgress = false
                     // Toast.makeText(LocalContext.current, response.message, Toast.LENGTH_LONG).show()
                 }
             }
+        }
+    }
+
+
+
+    /** Calendar logic to change the month */
+
+    val c = Calendar.getInstance()
+
+    var year by remember { mutableStateOf(c.get(Calendar.YEAR)) }
+    var month by remember { mutableStateOf(c.get(Calendar.MONTH)) }
+
+    var currentMonthLabel by remember { mutableStateOf("${SimpleDateFormat("MMM").format(c.time)} $year") }
+    var showDialog by remember { mutableStateOf(false) }
+
+    if (showDialog) {
+        MonthPickerDialog(onCancel = {
+            showDialog = false
+        }, onUpdateMonth = { newMonth: Int, newYear: Int ->
+            showDialog = false
+            month = newMonth
+            year = newYear
+
+            c.set(Calendar.MONTH, month)
+            c.set(Calendar.YEAR, year)
+
+            currentMonthLabel = "${SimpleDateFormat("MMM").format(c.time)} $year"
+            viewModel.getAllExpenses(month, year)
+        })
+    }
+
+    if(showProgress){
+        Column(
+            modifier = Modifier
+                .fillMaxSize(),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            CircularProgressIndicator(color = MaterialTheme.colorScheme.secondary)
         }
     }
 
@@ -101,6 +132,7 @@ fun ExpenseListScreen(viewModel: ExpenseViewModel, parentNavHostController: NavH
             .fillMaxSize()
             .padding(horizontal = 10.dp)
     ) {
+
         Row(
             modifier = Modifier.border(
                 border = BorderStroke(
@@ -118,10 +150,6 @@ fun ExpenseListScreen(viewModel: ExpenseViewModel, parentNavHostController: NavH
                     Column(modifier = Modifier.background(color)) {
                         Tab(selected = state == index, onClick = {
                             state = index
-                            expenseList.clear()
-                            if (index == 0) expenseList.addAll(allList)
-                            else expenseList.addAll(categoryWiseList)
-
                         }, selectedContentColor = colorResource(id = R.color.purple80), text = {
                             Text(
                                 text = title,
@@ -137,10 +165,43 @@ fun ExpenseListScreen(viewModel: ExpenseViewModel, parentNavHostController: NavH
             }
         }
 
+        Button(
+            onClick = {
+                showDialog = true
+            },
+            modifier = Modifier
+                .width(200.dp)
+                .padding(10.dp),
+            contentPadding = PaddingValues(
+                start = 20.dp,
+                top = 12.dp,
+                end = 20.dp,
+                bottom = 12.dp
+            ),
+            colors = ButtonDefaults.buttonColors(backgroundColor = colorResource(id = R.color.purple40))
+        ) {
+
+            Box(
+                modifier = Modifier.fillMaxWidth(),
+                contentAlignment = Alignment.Center
+            ) {
+                androidx.compose.material.Icon(
+                    imageVector = Icons.Default.DateRange,
+                    modifier = Modifier
+                        .size(18.dp)
+                        .align(Alignment.CenterEnd),
+                    contentDescription = "date picker",
+                    tint = Color.White
+                )
+                Text(currentMonthLabel, color = Color.White, style = Typography.bodyMedium)
+            }
+
+        }
+
         if (state == 0) {
             SwipeRefresh(
                 state = swipeRefreshState,
-                onRefresh = { viewModel.getAllExpenses() },
+                onRefresh = { viewModel.getAllExpenses(month,year) },
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(

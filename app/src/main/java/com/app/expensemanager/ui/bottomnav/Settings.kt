@@ -11,10 +11,12 @@ import androidx.compose.material.Text
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.unit.dp
+import com.app.expensemanager.BuildConfig
 import com.app.expensemanager.R
 import com.app.expensemanager.SignInActivity
 import com.app.expensemanager.data.ExpensePreferences
@@ -28,7 +30,7 @@ fun SettingScreen() {
 
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
-    Column(modifier = Modifier.fillMaxSize()) {
+    Column(modifier = Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally) {
         Text(
             text = "This app is created to fulfill two goals 1) to log the daily expenses and show the summary in a simple and elegant way. " +
                     "Secondly it demonstrates the usage of" +
@@ -45,7 +47,7 @@ fun SettingScreen() {
             },
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(20.dp),
+                .padding(horizontal = 20.dp, vertical = 10.dp),
             shape = RoundedCornerShape(10.dp),
             colors = ButtonDefaults.buttonColors(backgroundColor = colorResource(id = R.color.purple40))
         ) {
@@ -55,6 +57,11 @@ fun SettingScreen() {
                 color = colorResource(id = R.color.white)
             )
         }
+        Text(
+            text = BuildConfig.VERSION_NAME,
+            style = Typography.bodyLarge,
+            color = colorResource(id = R.color.white)
+        )
     }
 }
 

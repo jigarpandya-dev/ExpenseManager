@@ -3,6 +3,14 @@ package com.app.expensemanager.ui.expense
 
 import android.app.DatePickerDialog
 import android.widget.Toast
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.ExperimentalAnimationApi
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
+import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -43,7 +51,27 @@ fun AddExpenseScreen(
         mutableStateOf(Expense())
     }
 
+    var userCategoryList by remember {
+        mutableStateOf(emptyList<NewCategory>())
+    }
+
     LaunchedEffect(true) {
+        launch {
+            viewModel.categoriesResult.collect {
+                when (it) {
+                    is NetworkResultState.Error -> {
+                        Toast.makeText(context, it.message, Toast.LENGTH_SHORT).show()
+                    }
+                    is NetworkResultState.Success -> {
+                        userCategoryList = it.data
+                    }
+                    else -> {
+
+                    }
+                }
+            }
+        }
+
         launch {
             viewModel.addExpenseResult.collect {
                 when (it) {
@@ -51,12 +79,11 @@ fun AddExpenseScreen(
                         Toast.makeText(context, it.message, Toast.LENGTH_SHORT).show()
                     }
                     is NetworkResultState.Success -> {
-                        viewModel.onUIEvent(UIEvent.Idle)
                         Toast.makeText(context, "Expense added !!", Toast.LENGTH_SHORT).show()
-                        viewModel.getAllExpenses()
+                        viewModel.getAllExpenses(Calendar.getInstance().get(Calendar.MONTH),Calendar.getInstance().get(Calendar.YEAR))
                         parentNavController.popBackStack()
                     }
-                    else ->{
+                    else -> {
 
                     }
 
@@ -72,10 +99,10 @@ fun AddExpenseScreen(
                     }
                     is NetworkResultState.Success -> {
                         Toast.makeText(context, it.data.message, Toast.LENGTH_SHORT).show()
-                        viewModel.getAllExpenses()
+                        viewModel.getAllExpenses(Calendar.getInstance().get(Calendar.MONTH),Calendar.getInstance().get(Calendar.YEAR))
                         parentNavController.popBackStack()
                     }
-                    else->{
+                    else -> {
 
                     }
 
@@ -86,6 +113,7 @@ fun AddExpenseScreen(
         launch {
             viewModel.validationError.collect {
                 if (!it.isNullOrBlank()) {
+                    viewModel.onUIEvent(UIEvent.Idle)
                     Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
                 }
             }
@@ -134,7 +162,9 @@ fun AddExpenseScreen(
             ExpenseInput(
                 hint = "Category",
                 value = expense.category ?: "",
-                isCategoryDropdown = true
+                isCategoryDropdown = true,
+                userCategoryList = userCategoryList,
+                addCategory = { parentNavController.navigate("add_category") }
             ) {
                 expense.category = it
             }
@@ -160,7 +190,7 @@ fun AddExpenseScreen(
 
         Button(
             onClick = {
-                if(viewModel.uiEventState.value == UIEvent.Idle)
+                if (viewModel.uiEventState.value == UIEvent.Idle)
                     viewModel.onUIEvent(UIEvent.Submit(expense, expenseId))
             }, modifier = Modifier
                 .fillMaxWidth()
@@ -206,6 +236,7 @@ fun AddExpenseScreen(
     }
 }
 
+@OptIn(ExperimentalAnimationApi::class)
 @Composable
 fun ExpenseInput(
     hint: String,
@@ -214,7 +245,9 @@ fun ExpenseInput(
     isDatePicker: Boolean = false,
     isCategoryDropdown: Boolean = false,
     isTranTypeDropdown: Boolean = false,
-    callback: (String) -> Unit
+    userCategoryList: List<NewCategory>? = null,
+    addCategory: () -> Unit = {},
+    callback: (String) -> Unit,
 ) {
     var data by remember { mutableStateOf("") }
     var showDate by remember { mutableStateOf(false) }
@@ -261,13 +294,14 @@ fun ExpenseInput(
             enabled = !(isDatePicker || isCategoryDropdown || isTranTypeDropdown)
         )
 
-        if (mExpanded)
-            CategoryDropdownUI(textFieldSize) {
-                mExpanded = false
-                if (it != null) {
-                    data = it
-                    callback(it)
-                }
+        AnimatedVisibility(visible = mExpanded,enter= expandVertically(), exit = shrinkHorizontally()) {
+                CategoryDropdownUI(textFieldSize, userCategoryList, {
+                    mExpanded = false
+                    if (it != null) {
+                        data = it
+                        callback(it)
+                    }
+                }, addCategory)
             }
 
         if (showTransType)
@@ -318,9 +352,14 @@ fun DateUI(c: Calendar, callback: (String?) -> Unit) {
 }
 
 @Composable
-fun CategoryDropdownUI(textFieldSize: Size, callback: (String?) -> Unit) {
+fun CategoryDropdownUI(
+    textFieldSize: Size,
+    userCategoryList: List<NewCategory>?,
+    callback: (String?) -> Unit,
+    addCategory: () -> Unit
+) {
 
-    val categories = listOf(
+    val categories = mutableListOf(
         "Grocery",
         "Food & Restaurant",
         "Grooming & Clothing",
@@ -338,7 +377,12 @@ fun CategoryDropdownUI(textFieldSize: Size, callback: (String?) -> Unit) {
         "Learning",
         "Service & Repair"
 
-        )
+    )
+
+    userCategoryList?.forEach {
+        categories.add(it.category)
+    }
+
 
     DropdownMenu(
         expanded = true,
@@ -362,6 +406,18 @@ fun CategoryDropdownUI(textFieldSize: Size, callback: (String?) -> Unit) {
             }
 
         }
+
+        Text(
+            modifier = Modifier
+                .padding(10.dp)
+                .clickable {
+                    addCategory()
+                },
+            text = "+ Add your new category",
+            color = androidx.compose.material3.MaterialTheme.colorScheme.secondary,
+            style = Typography.bodyLarge
+        )
+
     }
 
 }
